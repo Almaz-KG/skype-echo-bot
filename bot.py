@@ -10,40 +10,52 @@ WELCOME_MESSAGE = """
 Привет!
 Я бот проекта DC_MDM - буду рад Вам помочь!\n
 Вот что сейчас умею:\n
-- env 'STAGE', 'UAT', 'PREPRPOD', 'PROD' (слежу за деплойментом на разные среды)
+- env 'STAGE', 'UAT', 'PREPRPOD', 'PROD' - задачи DI на деплоймент
 """
 
-GLOBAL_STATE = {'stage': 'STAGE_RPDC', 'uat': 'UAT_RPDC', 'preprod': 'PREPRPOD_PRDC', 'prod': 'PROD_PRDC'}
+GLOBAL_STATE = {'STAGE': 'STAGE_RPDC', 'UAT': 'UAT_RPDC', 'PREPROD': 'PREPRPOD_PRDC', 'PROD': 'PROD_PRDC'}
 
 
 def get_command_string(text):
-    return text[len(ACTION_TRIGGER) + 1 : ].lower().split(" ")
+    return list(map(lambda x: x.strip(), text[len(ACTION_TRIGGER) + 1 : ].split(" ")))
 
 
 def show_env_state(env):
     result = "Нет данных"
 
-    if env in GLOBAL_STATE:
-        result = f"Сейчас на {env} развернуто {GLOBAL_STATE[env]}"
+    if env.upper() in GLOBAL_STATE:
+        result = f"Сейчас на {env} развернуто {GLOBAL_STATE[env.upper()]}"
 
     return result;
 
+
 def save_env_state(env, state):
-    GLOBAL_STATE[env] = state;
+    GLOBAL_STATE[env.upper()] = state;
     return f"Сохранил для {env} значение {state}"
 
 
-def process_env_command(params):
-    if (len(params) == 1):
-        return show_env_state(params[0])
-    if (len(params) == 2):
-        return save_env_state(params[0], params[1])
+def show_all_env_state():
+    result = f"""
+    Текущий статус по средам: 
+
+    """
+    for k in GLOBAL_STATE.keys():
+        result += f"""
+    {k}: {GLOBAL_STATE[k]}"""
+    return result;
+
+
+def process_env_command(cmd):
+    if (len(cmd) == 0):
+        return show_all_env_state()
+    if (len(cmd) == 1):
+        return show_env_state(cmd[0])
     else:
-        return "Неверно задана команда 'env' укажите $ENV" 
+        return save_env_state(cmd[0], " ".join(cmd[1:]))
 
 
 def process_command(params):
-    if 'env' == params[0]:
+    if 'env' == params[0].lower():
         return process_env_command(params[1:])
     else:
         return f"Неизвестная команда {params[0]}"
